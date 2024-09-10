@@ -100,7 +100,6 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			fmt.Println("THIS IS THE ERROR BEING PRINTED")
 			v.AddError("token", "invalid or expired activation token")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
@@ -111,7 +110,6 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	user.Activated = true
 
 	err = app.models.Users.Update(user)
-	fmt.Println("DID WE GET HERE REALLY????????????????", "ERR", err)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrEditConflict):
