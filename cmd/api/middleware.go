@@ -96,14 +96,13 @@ func (app *application) authentication(next http.Handler) http.Handler {
 			return
 		}
 
-		headerParts := strings.Split(authorizationHeader, "")
+		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
 		token := headerParts[1]
-
 		v := validator.New()
 
 		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
