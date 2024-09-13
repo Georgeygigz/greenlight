@@ -80,5 +80,33 @@ linker_flags = '-s -X main.buildTime=${current_time} -X main.version=${git_descr
 .PHONY: build/api
 build/api:
 	@echo 'Building cmd/api...'
-	go build -ldflags='-s -X main.buildTime=${current_time}' -o=./bin/api ./cmd/api
-	GOOS=linux GOARCH=amd64 go build -ldflags='-s -X main.buildTime=${current_time}' -o=./bin/linux_amd64/api ./cmd/api
+	go build -ldflags='-s -X main.buildTime=${current_time} -X main.version=${git_description}' -o=./bin/api ./cmd/api
+	GOOS=linux GOARCH=amd64 go build -ldflags='-s -X main.buildTime=${current_time} -X main.version=${git_description}' -o=./bin/linux_amd64/api ./cmd/api
+
+
+
+# ==================================================================================== #
+# PRODUCTION
+# ==================================================================================== #
+production_host_ip = '46.101.197.80'
+## production/connect: connect to the production server
+.PHONY: production/connect
+production/connect:
+	ssh -i /Users/gigz/.ssh/golang-do greenlight@${production_host_ip}
+
+
+## production/deploy/api: deploy the api to production
+.PHONY: production/deploy/api
+production/deploy/api:
+	scp -i /Users/gigz/.ssh/golang-do ./bin/linux_amd64/api greenlight@46.101.197.80:~
+	scp -i /Users/gigz/.ssh/golang-do -r ./migrations greenlight@46.101.197.80:~
+	scp -i /Users/gigz/.ssh/golang-do ./remote/production/api.service greenlight@46.101.197.80:~
+	scp -i /Users/gigz/.ssh/golang-do ./remote/production/Caddyfile greenlight@46.101.197.80:~
+	ssh -t -i /Users/gigz/.ssh/golang-do greenlight@${production_host_ip} '\
+	migrate -path ~/migrations -database $$GREENLIGHT_DB_DSN up \
+	&& sudo mv ~/api.service /etc/systemd/system/ \
+	&& sudo systemctl enable api \
+	&& sudo systemctl restart api \
+	&& sudo mv ~/Caddyfile /etc/caddy/ \
+	&& sudo systemctl reload caddy \
+	'

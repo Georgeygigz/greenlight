@@ -18,7 +18,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
+var version string
 
 var buildTime string
 
